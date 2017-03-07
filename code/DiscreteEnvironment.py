@@ -26,7 +26,8 @@ class DiscreteEnvironment(object):
         # This function maps a node configuration in full configuration
         # space to a node in discrete space
         #
-        node_id = 0
+        coord = self.ConfigurationToGridCoord(config)
+        node_id = self.GridCoordToNodeId(coord)
         return node_id
 
     def NodeIdToConfiguration(self, nid):
@@ -35,7 +36,8 @@ class DiscreteEnvironment(object):
         # This function maps a node in discrete space to a configuraiton
         # in the full configuration space
         #
-        config = [0] * self.dimension
+        coord = self.NodeIdToGridCoord(nid)
+        config = self.GridCoordToConfiguration(coord)
         return config
         
     def ConfigurationToGridCoord(self, config):
@@ -44,7 +46,11 @@ class DiscreteEnvironment(object):
         # This function maps a configuration in the full configuration space
         # to a grid coordinate in discrete space
         #
+
         coord = [0] * self.dimension
+        for i in range(self.dimension):
+            coord[i] = config[i]//self.resolution
+
         return coord
 
     def GridCoordToConfiguration(self, coord):
@@ -54,6 +60,8 @@ class DiscreteEnvironment(object):
         # to a configuration in the full configuration space
         #
         config = [0] * self.dimension
+        for i in range(self.dimension):
+            config[i] = (coord[i]+.5)*self.resolution
         return config
 
     def GridCoordToNodeId(self,coord):
@@ -62,6 +70,13 @@ class DiscreteEnvironment(object):
         # This function maps a grid coordinate to the associated
         # node id 
         node_id = 0
+
+        for i in range(self.dimension-1, -1, -1):
+            spacesize = 1;
+            for j in range(0, i):
+                spacesize = spacesize*self.num_cells[j]
+            node_id = node_id + spacesize*coord[i]
+
         return node_id
 
     def NodeIdToGridCoord(self, node_id):
@@ -70,6 +85,13 @@ class DiscreteEnvironment(object):
         # This function maps a node id to the associated
         # grid coordinate
         coord = [0] * self.dimension
+
+        for i in range(self.dimension-1, -1, -1):
+            spacesize = 1;
+            for j in range(0, i):
+                spacesize = spacesize*self.num_cells[j]
+            coord[i] = node_id//spacesize
+            node_id = node_id - coord[i]*spacesize
         return coord
         
         
