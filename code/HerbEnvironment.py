@@ -35,33 +35,36 @@ class HerbEnvironment(object):
         self.robot.GetEnv().GetViewer().SetCamera(camera_pose)
     
     def GetSuccessors(self, node_id):
-
         successors = []
-
-        # TODO: Here you will implement a function that looks
-        #  up the configuration associated with the particular node_id
-        #  and return a list of node_ids that represent the neighboring
-        #  nodes
+        coord = self.discrete_env.NodeIdToGridCoord(node_id)
         
+        #import IPython
+        #IPython.embed()
+        for i in range(len(coord)):
+            if(coord[i] > 0):
+                tempcoord = coord[:]
+                tempcoord[i] = coord[i] - 1
+                successors.append(self.discrete_env.GridCoordToNodeId(tempcoord))
+            if(coord[i] < self.discrete_env.num_cells[i]-1):
+                tempcoord = coord[:]
+                tempcoord[i] = coord[i] + 1
+                successors.append(self.discrete_env.GridCoordToNodeId(tempcoord))
+
         return successors
 
     def ComputeDistance(self, start_id, end_id):
 
         dist = 0
+        start = self.discrete_env.NodeIdToGridCoord(start_id)
+        end = self.discrete_env.NodeIdToGridCoord(end_id)
 
-        # TODO: Here you will implement a function that 
-        # computes the distance between the configurations given
-        # by the two node ids
+        for i in range(len(end)):
+            dist = dist + abs(start[i] - end[i])
        
         return dist
 
     def ComputeHeuristicCost(self, start_id, goal_id):
         
-        cost = 0
+        return self.ComputeDistance(start_id, goal_id) #manhatten distance yall
 
-        # TODO: Here you will implement a function that 
-        # computes the heuristic cost between the configurations
-        # given by the two node ids
-        
-        return cost
 
