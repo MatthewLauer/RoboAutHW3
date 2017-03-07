@@ -44,13 +44,24 @@ class HerbEnvironment(object):
             if(coord[i] > 0):
                 tempcoord = coord[:]
                 tempcoord[i] = coord[i] - 1
-                successors.append(self.discrete_env.GridCoordToNodeId(tempcoord))
+                position = self.discrete_env.GridCoordToConfiguration(tempcoord)
+                if(self.CheckCollision(position)):
+                        successors.append(self.discrete_env.GridCoordToNodeId(tempcoord))
             if(coord[i] < self.discrete_env.num_cells[i]-1):
                 tempcoord = coord[:]
                 tempcoord[i] = coord[i] + 1
-                successors.append(self.discrete_env.GridCoordToNodeId(tempcoord))
+                position = self.discrete_env.GridCoordToConfiguration(tempcoord)
+                if(self.CheckCollision(position)):
+                        successors.append(self.discrete_env.GridCoordToNodeId(tempcoord))
 
         return successors
+
+    def CheckCollision(self, conf):
+        self.robot.SetActiveDOFValues(conf)
+        for body in self.robot.GetEnv().GetBodies():
+            if (body.GetName() != self.robot.GetName() and self.robot.GetEnv().CheckCollision(body, self.robot)):
+                return False
+        return True
 
     def ComputeDistance(self, start_id, end_id):
 
