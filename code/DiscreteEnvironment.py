@@ -18,8 +18,7 @@ class DiscreteEnvironment(object):
         self.num_cells = self.dimension*[0]
         for idx in range(self.dimension):
             self.num_cells[idx] = numpy.ceil((upper_limits[idx] - lower_limits[idx])/resolution)
-
-
+        
     def ConfigurationToNodeId(self, config):
         
         # TODO:
@@ -94,5 +93,7 @@ class DiscreteEnvironment(object):
             node_id = node_id - coord[i]*spacesize
         return coord
         
-        
+#dis = DiscreteEnvironment(.2, [0,0], [1,1])      
+#import IPython
+#IPython.embed()
         
