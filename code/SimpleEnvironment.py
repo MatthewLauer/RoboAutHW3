@@ -45,7 +45,7 @@ class SimpleEnvironment(object):
 
     def CheckCollision(self, conf):
         transform = self.robot.GetTransform()
-	transform[0, 3] = conf[0]
+        transform[0, 3] = conf[0]
         transform[1, 3] = conf[1]
         self.robot.SetTransform(transform);
 
