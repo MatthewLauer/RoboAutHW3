@@ -17,34 +17,36 @@ class AStarPlanner(object):
         
         start_node = Node(0,None,0,self.planning_env.discrete_env.ConfigurationToNodeId(start_config))
         self.open.addNode(start_node)
-        # TODO: Here you will implement the AStar planner
-        #  The return path should be a numpy array
-        #  of dimension k x n where k is the number of waypoints
-        #  and n is the dimension of the robots configuration space
+        #self.planning_env.InitializePlot(goal_config)
         goal_id = self.planning_env.discrete_env.ConfigurationToNodeId(goal_config)
         self.open.setGoal(goal_id)
         suc_node = start_node
+        self.close.addNode(start_node.id)
+
         while (self.open.isEmpty() == False):
             #import IPython
             #IPython.embed()
             curr = self.open.getlowest()
-            self.close.addNode(curr.id)
             if curr.id == goal_id:
                 suc_node = curr
                 break
             successors = self.planning_env.GetSuccessors(curr.id)
+            #import IPython
+            #IPython.embed()
             for i in range(0, len(successors)):
                 if (self.close.isDuplicate(successors[i]) == False):
                     newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
                     self.open.addNode(newnode)
+                    #self.planning_env.PlotEdge(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i]), self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
+                    self.close.addNode(successors[i])
+
 
         while (suc_node.id != start_node.id):
             plan.insert(0,self.planning_env.discrete_env.NodeIdToConfiguration(suc_node.id))
             suc_node = suc_node.parent
         plan.insert(0,start_config)
         print("--- %s seconds ---" % (time.time() - start_time))
-        import IPython
-        IPython.embed()
+        plan.append(goal_config)
         return plan
 
 
@@ -103,14 +105,14 @@ class Openlist:
         greatest = len(self.open)
         oldmid = -1
         midpoint = 0
-
+        weight = 10
         while(lowest < greatest):
             midpoint = (lowest + greatest)/2
-            if(self.open[midpoint].cost+self.env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id) == node.cost+self.env.ComputeHeuristicCost(node.id, self.goal_id) or oldmid == midpoint):
+            if(self.open[midpoint].cost+weight*self.env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id) == node.cost+weight*self.env.ComputeHeuristicCost(node.id, self.goal_id) or oldmid == midpoint):
                 lowest = midpoint
                 break;
             else:
-                if (node.cost+self.env.ComputeHeuristicCost(node.id, self.goal_id) < self.open[midpoint].cost+self.env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id)):
+                if (node.cost+weight*self.env.ComputeHeuristicCost(node.id, self.goal_id) < self.open[midpoint].cost+weight*self.env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id)):
                     greatest = midpoint
                 else:
                     lowest = midpoint+1
