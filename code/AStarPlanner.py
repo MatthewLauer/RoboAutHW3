@@ -1,44 +1,47 @@
-
+import time
 class AStarPlanner(object):
     
     def __init__(self, planning_env, visualize):
         self.planning_env = planning_env
         self.visualize = visualize
         self.nodes = dict()
-        self.open = Openlist(planning_env, goal_id)
+        self.open = Openlist(planning_env)
         self.close = Closelist(planning_env)
 
 
     def Plan(self, start_config, goal_config):
+        start_time = time.time()
 
         plan = []
         
-        plan.append(start_config)
         start_node = Node(0,None,0,self.planning_env.discrete_env.ConfigurationToNodeId(start_config))
-        self.open.append(start_node)
+        self.open.addNode(start_node)
         # TODO: Here you will implement the AStar planner
         #  The return path should be a numpy array
         #  of dimension k x n where k is the number of waypoints
         #  and n is the dimension of the robots configuration space
         goal_id = self.planning_env.discrete_env.ConfigurationToNodeId(goal_config)
+        self.open.setGoal(goal_id)
         suc_node = start_node
-        while (self.open.empty() != False):
+        while (self.open.isEmpty() == False):
+            #import IPython
+            #IPython.embed()
             curr = self.open.getlowest()
-            self.close.AddNode(self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
+            self.close.addNode(self.planning_env.discrete_env.NodeIdToGridCoord(curr.id))
             if curr.id == goal_id:
                 suc_node = curr
                 break
-            successors = planning_env.GetSuccessors(curr.id)
+            successors = self.planning_env.GetSuccessors(curr.id)
             for i in range(0, len(successors)):
-                if (close.isDuplicate(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i])) == False):
+                if (self.close.isDuplicate(self.planning_env.discrete_env.NodeIdToGridCoord(successors[i])) == False):
                     newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
                     self.open.addNode(newnode)
 
-
-
-                
-        plan.append(goal_config)
-
+        while (suc_node.id != start_node.id):
+            plan.insert(0,self.planning_env.discrete_env.NodeIdToConfiguration(suc_node.id))
+            suc_node = suc_node.parent
+        plan.insert(0,start_config)
+        print("--- %s seconds ---" % (time.time() - start_time))
         return plan
 
 
@@ -55,36 +58,40 @@ class Node:
         result += " Depth: " + str(self.depth)
         result += " ID: " + str(self.id)
         if self.parent != None:
-            result += " Parent: " + str(self.parent.state)
+            result += " Parent: " + str(self.parent.id)
         return result
 
 
 class Closelist:
 
     def __init__(self, env):
-        self.close = [[0 for i in range(env.num_cells[0])] for j in range(env.num_cells[1])]
+        #import IPython
+        #IPython.embed()
+        self.close = [[0 for i in range(int(env.discrete_env.num_cells[0]))] for j in range(int(env.discrete_env.num_cells[1]))]
 
     def addNode(self, coord):
-        self.close[coord[0]][coord[1]] = 1
+        self.close[int(coord[0])][int(coord[1])] = 1
 
     def isDuplicate(self, coord):
-        if (self.close[coord[0]][coord[1]] == 1):
+        if (self.close[int(coord[0])][int(coord[1])] == 1):
             return True
         return False
 
 
 class Openlist:
-    def __init__(self, env, goal_id):
+    def __init__(self, env):
         self.env = env
-        self.goal_id
         self.open = []
+        self.goal_id = None
     def __str__(self):
         result = "Open List contains " + str(len(self.open)) + " items\n"
         for item in self.open:
             result += str(item) + "\n"
         return result
-    def addNode(self, node):
+    def setGoal(self, goal_id):
+        self.goal_id = goal_id
 
+    def addNode(self, node):
         lowest = 0
         greatest = len(self.open)
         oldmid = -1
@@ -92,11 +99,11 @@ class Openlist:
 
         while(lowest < greatest):
             midpoint = (lowest + greatest)/2
-            if(self.open[midpoint].cost+env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id) == node.cost+env.ComputeHeuristicCost(node.id, self.goal_id) or oldmid == midpoint):
+            if(self.open[midpoint].cost+self.env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id) == node.cost+self.env.ComputeHeuristicCost(node.id, self.goal_id) or oldmid == midpoint):
                 lowest = midpoint
                 break;
             else:
-                if (node.cost+env.ComputeHeuristicCost(node.id, self.goal_id) < self.open[midpoint].cost+env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id)):
+                if (node.cost+self.env.ComputeHeuristicCost(node.id, self.goal_id) < self.open[midpoint].cost+self.env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id)):
                     greatest = midpoint
                 else:
                     lowest = midpoint+1
@@ -104,10 +111,10 @@ class Openlist:
         self.open.insert(lowest, node)
 
     def getlowest(self):
-        if not self.empty():
+        if not self.isEmpty():
             return self.open.pop(0)
         else:
             raise RunTimeError
 
-    def empty(self):
+    def isEmpty(self):
         return len(self.open) == 0

@@ -65,8 +65,8 @@ if __name__ == "__main__":
     elif args.robot == 'simple':
         robot = SimpleRobot(env)
         planning_env = SimpleEnvironment(robot, args.resolution)
-        import IPython
-        IPython.embed()
+        #import IPython
+        #IPython.embed()
     else:
         print 'Unknown robot option: %s' % args.robot
         exit(0)
@@ -86,8 +86,8 @@ if __name__ == "__main__":
 
     main(robot, planning_env, planner)
 
-    import IPython
-    IPython.embed()
+    #import IPython
+    #IPython.embed()
 
         
     
