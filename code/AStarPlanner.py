@@ -5,6 +5,8 @@ class AStarPlanner(object):
         self.planning_env = planning_env
         self.visualize = visualize
         self.nodes = dict()
+        self.open = Openlist(planning_env, goal_id)
+        self.close = Closelist(planning_env)
 
 
     def Plan(self, start_config, goal_config):
@@ -12,13 +14,25 @@ class AStarPlanner(object):
         plan = []
         
         plan.append(start_config)
-        curr_conf = start_config
+        start_node = Node(0,None,0,self.planning_env.discrete_env.ConfigurationToNodeId(start_config))
+        self.open.append(start_node)
         # TODO: Here you will implement the AStar planner
         #  The return path should be a numpy array
         #  of dimension k x n where k is the number of waypoints
         #  and n is the dimension of the robots configuration space
-        while (curr_conf != goalconfig):
-
+        goal_id = self.planning_env.discrete_env.ConfigurationToNodeId(goal_config)
+        suc_node = start_node
+        while (self.open.empty() != False):
+            curr = self.open.getlowest()
+            self.close.AddNode(self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
+            if curr.id == goal_id:
+                suc_node = curr
+                break
+            successors = planning_env.GetSuccessors(curr.id)
+            for i in range(0, len(successors)):
+                if (close.isDuplicate(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i])) == False):
+                    newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
+                    self.open.addNode(newnode)
 
 
 
@@ -29,51 +43,40 @@ class AStarPlanner(object):
 
 
 class Node:
-    def __init__(self, state, parent, operator, depth):
-        self.state = state
+    def __init__(self, cost, parent, depth, id):
+        self.cost = cost
         self.parent = parent
-        self.operator = operator
         self.depth = depth
+        self.id = id
 
     def __str__(self):
         #Spits out a full list the node's state/operator and states/operators leading to it
-        result = "State: " +  str(self.state)
+        result = "Cost: " +  str(self.cost)
         result += " Depth: " + str(self.depth)
+        result += " ID: " + str(self.id)
         if self.parent != None:
             result += " Parent: " + str(self.parent.state)
-            result += " Operator: " + self.operator
         return result
 
-        class Closelist:
 
-    def __init__(self):
-        #God is dead
-        self.close = [[[100000000 for i in range(1)] for j in range(1000)] for k in range(1000)]
+class Closelist:
 
-    def addNode(self, node):
-        self.close[node.state.startpos[0]][node.state.startpos[1]].append(node.state.time)
+    def __init__(self, env):
+        self.close = [[0 for i in range(env.num_cells[0])] for j in range(env.num_cells[1])]
 
-    def isDuplicate(self, State):
-        #print "State"
-        #State.stateInfo()
-        '''for i in range(0,len(self.close)):
-            #self.close[i].state.stateInfo()
-            if (self.close[i].state.equals(State)):
-                #print "True"
-                return True
-        #print "False"
-        '''
-        timelist = self.close[State.startpos[0]][State.startpos[1]]
-        for i in range(0, len(timelist)):
-            if (timelist[i] == State.time):
-                return True
+    def addNode(self, coord):
+        self.close[coord[0]][coord[1]] = 1
+
+    def isDuplicate(self, coord):
+        if (self.close[coord[0]][coord[1]] == 1):
+            return True
         return False
 
 
 class Openlist:
-    """
-    """
-    def __init__(self):
+    def __init__(self, env, goal_id):
+        self.env = env
+        self.goal_id
         self.open = []
     def __str__(self):
         result = "Open List contains " + str(len(self.open)) + " items\n"
@@ -89,11 +92,11 @@ class Openlist:
 
         while(lowest < greatest):
             midpoint = (lowest + greatest)/2
-            if(self.open[midpoint].state.getF() == node.state.getF() or oldmid == midpoint):
+            if(self.open[midpoint].cost+env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id) == node.cost+env.ComputeHeuristicCost(node.id, self.goal_id) or oldmid == midpoint):
                 lowest = midpoint
                 break;
             else:
-                if (node.state.getF() < self.open[midpoint].state.getF()):
+                if (node.cost+env.ComputeHeuristicCost(node.id, self.goal_id) < self.open[midpoint].cost+env.ComputeHeuristicCost(self.open[midpoint].id, self.goal_id)):
                     greatest = midpoint
                 else:
                     lowest = midpoint+1
