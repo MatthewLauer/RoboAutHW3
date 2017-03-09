@@ -26,8 +26,7 @@ class SimpleEnvironment(object):
         successors = []
         coord = self.discrete_env.NodeIdToGridCoord(node_id)
         
-        #import IPython
-        #IPython.embed()
+
         for i in range(len(coord)):
             if(coord[i] > 0):
                 tempcoord = coord[:]
@@ -46,8 +45,8 @@ class SimpleEnvironment(object):
 
     def CheckCollision(self, conf):
         transform = self.robot.GetTransform()
-        transform[0, 3] = xSteps[i]
-        transform[1, 3] = ySteps[i]
+	transform[0, 3] = conf[0]
+        transform[1, 3] = conf[1]
         self.robot.SetTransform(transform);
 
         for body in self.robot.GetEnv().GetBodies():
