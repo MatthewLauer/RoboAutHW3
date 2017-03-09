@@ -1,4 +1,5 @@
 import time
+import bisect
 class AStarPlanner(object):
     
     def __init__(self, planning_env, visualize):
@@ -27,13 +28,13 @@ class AStarPlanner(object):
             #import IPython
             #IPython.embed()
             curr = self.open.getlowest()
-            self.close.addNode(self.planning_env.discrete_env.NodeIdToGridCoord(curr.id))
+            self.close.addNode(curr.id)
             if curr.id == goal_id:
                 suc_node = curr
                 break
             successors = self.planning_env.GetSuccessors(curr.id)
             for i in range(0, len(successors)):
-                if (self.close.isDuplicate(self.planning_env.discrete_env.NodeIdToGridCoord(successors[i])) == False):
+                if (self.close.isDuplicate(successors[i]) == False):
                     newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
                     self.open.addNode(newnode)
 
@@ -42,6 +43,8 @@ class AStarPlanner(object):
             suc_node = suc_node.parent
         plan.insert(0,start_config)
         print("--- %s seconds ---" % (time.time() - start_time))
+        import IPython
+        IPython.embed()
         return plan
 
 
@@ -67,13 +70,17 @@ class Closelist:
     def __init__(self, env):
         #import IPython
         #IPython.embed()
-        self.close = [[0 for i in range(int(env.discrete_env.num_cells[0]))] for j in range(int(env.discrete_env.num_cells[1]))]
+        self.close = []
 
-    def addNode(self, coord):
-        self.close[int(coord[0])][int(coord[1])] = 1
+    def addNode(self, id):
+        bisect.insort(self.close,id)
 
-    def isDuplicate(self, coord):
-        if (self.close[int(coord[0])][int(coord[1])] == 1):
+    def isDuplicate(self, id):
+        #import IPython
+        #IPython.embed()
+        if(bisect.bisect_left(self.close,id) == len(self.close)):
+            return False
+        if (self.close[bisect.bisect_left(self.close,id)] == id):
             return True
         return False
 

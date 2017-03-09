@@ -48,7 +48,7 @@ class DiscreteEnvironment(object):
 
         coord = [0] * self.dimension
         for i in range(self.dimension):
-            coord[i] = config[i]//self.resolution
+            coord[i] = (config[i]-self.lower_limits[i])//self.resolution
 
         return coord
 
@@ -60,7 +60,7 @@ class DiscreteEnvironment(object):
         #
         config = [0] * self.dimension
         for i in range(self.dimension):
-            config[i] = (coord[i]+.5)*self.resolution
+            config[i] = (coord[i]+.5)*self.resolution+self.lower_limits[i]
         return config
 
     def GridCoordToNodeId(self,coord):

@@ -37,7 +37,6 @@ class HerbEnvironment(object):
     def GetSuccessors(self, node_id):
         successors = []
         coord = self.discrete_env.NodeIdToGridCoord(node_id)
-        
         #import IPython
         #IPython.embed()
         for i in range(len(coord)):
@@ -57,6 +56,10 @@ class HerbEnvironment(object):
         return successors
 
     def CheckCollision(self, conf):
+      
+        for i in range(len(conf)):
+            if conf[i] > self.upper_limits[i] or conf[i] < self.lower_limits[i]:
+                return False
         self.robot.SetActiveDOFValues(conf)
         for body in self.robot.GetEnv().GetBodies():
             if (body.GetName() != self.robot.GetName() and self.robot.GetEnv().CheckCollision(body, self.robot)):
