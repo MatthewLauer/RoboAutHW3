@@ -30,11 +30,11 @@ def main(robot, planning_env, planner):
     path_length = 0
     for i in range(len(plan)-1):
        path_length += la.norm(numpy.array(plan[i])-numpy.array(plan[i+1]))
-    print "path_legnth: %0.2f" % path_length
+    print "path_length: %0.2f" % path_length
   
     if visualize:
         for i in range(len(plan)-1):                        # ONLY FOR SIMPLE ROBOT
-            planning_env.PlotEdge(plan[i], plan[i+1], 'r')
+            planning_env.PlotPlan(plan[i], plan[i+1])
 
     traj = robot.ConvertPlanToTrajectory(plan)
 

@@ -17,15 +17,17 @@ class AStarPlanner(object):
         
         start_node = Node(0,None,0,self.planning_env.discrete_env.ConfigurationToNodeId(start_config))
         self.open.addNode(start_node)
-        #self.planning_env.InitializePlot(goal_config)
+        if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
+            self.planning_env.InitializePlot(goal_config)
         goal_id = self.planning_env.discrete_env.ConfigurationToNodeId(goal_config)
         self.open.setGoal(goal_id)
         suc_node = start_node
         self.close.addNode(start_node.id)
-
+        count = 0
         while (self.open.isEmpty() == False):
             #import IPython
             #IPython.embed()
+            count = count + 1
             curr = self.open.getlowest()
             if curr.id == goal_id:
                 suc_node = curr
@@ -37,7 +39,8 @@ class AStarPlanner(object):
                 if (self.close.isDuplicate(successors[i]) == False):
                     newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
                     self.open.addNode(newnode)
-                    #self.planning_env.PlotEdge(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i]), self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
+                    if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
+                        self.planning_env.PlotEdge(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i]), self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
                     self.close.addNode(successors[i])
 
 
@@ -46,6 +49,7 @@ class AStarPlanner(object):
             suc_node = suc_node.parent
         plan.insert(0,start_config)
         print("--- %s seconds ---" % (time.time() - start_time))
+        print("--- %d expansions ---" % count)
         plan.append(goal_config)
         return plan
 

@@ -99,5 +99,10 @@ class SimpleEnvironment(object):
                 [sconfig[1], econfig[1]],
                 'k.-', linewidth=2.5)
         pl.draw()
+    def PlotPlan(self, sconfig, econfig):
+        pl.plot([sconfig[0], econfig[0]],
+                [sconfig[1], econfig[1]],
+                'r.-', linewidth=2.5)
+        pl.draw()
 
         
