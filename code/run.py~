@@ -29,7 +29,7 @@ def main(robot, planning_env, planner):
 
     path_length = 0
     for i in range(len(plan)-1):
-       path_length += la.norm(numpy.array(plan[i])-numpy.array(plan[i+1]))
+       path_length += la.norm(np.array(plan[i])-np.array(plan[i+1]))
     print "path_legnth: %0.2f" % path_length
   
     if visualize:
