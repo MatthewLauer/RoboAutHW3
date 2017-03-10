@@ -27,8 +27,12 @@ class BreadthFirstPlanner(object):
         while (self.open.isEmpty() == False):
             #import IPython
             #IPython.embed()
-            count = count + 1
             curr = self.open.getlowest()
+            if(curr.parent != None):
+                if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
+                    self.planning_env.PlotEdge(self.planning_env.discrete_env.NodeIdToConfiguration(curr.id), self.planning_env.discrete_env.NodeIdToConfiguration(curr.parent.id))
+            count = count + 1
+            #curr = self.open.getlowest()
             if curr.id == goal_id:
                 suc_node = curr
                 break
@@ -39,8 +43,6 @@ class BreadthFirstPlanner(object):
                 if (self.close.isDuplicate(successors[i]) == False):
                     newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
                     self.open.addNode(newnode)
-                    if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
-                        self.planning_env.PlotEdge(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i]), self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
                     self.close.addNode(successors[i])
 
 
