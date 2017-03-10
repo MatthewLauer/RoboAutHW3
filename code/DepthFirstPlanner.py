@@ -1,7 +1,5 @@
-
-import DiscreteEnvironment as DE
-import numpy as np
-import matplotlib.pyplot as pl
+import time
+import bisect
 class DepthFirstPlanner(object):
 
     
@@ -9,69 +7,112 @@ class DepthFirstPlanner(object):
         self.planning_env = planning_env
         self.visualize = visualize
         self.nodes = dict()
+        self.open = Openlist(planning_env)
+        self.close = Closelist(planning_env)
 
-	
 
     def Plan(self, start_config, goal_config):
-        plan =[]
-	nodelist =[]
-	if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
-		self.planning_env.InitializePlot(goal_config)
-	Lowerlimits = self.planning_env.lower_limits;
-	Upperlimits = self.planning_env.upper_limits;
-	#self.planning_env.discrete_env.resolution = 1
+        start_time = time.time()
 
-	obj = self.planning_env.discrete_env
-	
-
-	
-	a = obj.ConfigurationToGridCoord(goal_config)
-	b = obj.ConfigurationToGridCoord(start_config)
-	targetnodeid = obj.GridCoordToNodeId(a)
-	currentnodeid = obj.GridCoordToNodeId(b)
-
-	start = currentnodeid
-	visited = []
-	stack = [currentnodeid]
-
-
-	vertex = currentnodeid
-	count = 0
-    	#visited, stack = set(), [start]
-    	while stack and (vertex != targetnodeid):
-        	
-
-        	if vertex not in visited:
-            		visited.append(vertex)
-
-            		for value in self.planning_env.GetSuccessors(vertex):	
-				stack.append(value)
+        plan = []
+        
+        start_node = Node(0,None,0,self.planning_env.discrete_env.ConfigurationToNodeId(start_config))
+        self.open.addNode(start_node)
+        if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
+            self.planning_env.InitializePlot(goal_config)
+        goal_id = self.planning_env.discrete_env.ConfigurationToNodeId(goal_config)
+        self.open.setGoal(goal_id)
+        suc_node = start_node
+        self.close.addNode(start_node.id)
+        count = 0
+        while (self.open.isEmpty() == False):
+            #import IPython
+            #IPython.embed()
+            count = count + 1
+            curr = self.open.getlowest()
+            if curr.id == goal_id:
+                suc_node = curr
+                break
+            successors = self.planning_env.GetSuccessors(curr.id)
+            #import IPython
+            #IPython.embed()
+            for i in range(0, len(successors)):
+                if (self.close.isDuplicate(successors[i]) == False):
+                    newnode = Node(curr.cost+1,curr,curr.depth+1, successors[i])
+                    self.open.addNode(newnode)
+                    if self.visualize and hasattr(self.planning_env, 'InitializePlot'):
+                        self.planning_env.PlotEdge(self.planning_env.discrete_env.NodeIdToConfiguration(successors[i]), self.planning_env.discrete_env.NodeIdToConfiguration(curr.id))
+                    self.close.addNode(successors[i])
 
 
-                		#print plan_id[count], count
-                		#print self.planning_env.discrete_env.NodeIdToConfiguration(plan_id[count-1]),self.planning_env.discrete_env.NodeIdToConfiguration(current)
-
-			count = count + 1;
-                pl.plot(obj.NodeIdToConfiguration(visited[count-1]),obj.NodeIdToConfiguration(vertex),'r.-', linewidth=2.5)
-                pl.draw()
-		vertex = stack.pop()
-		nodelist.append(vertex)
-
-	plannodeid = visited
-	plannodeid.append(targetnodeid)
-
-	
-
-
-
-	for i in range(0,len(plannodeid)):
-		temp = (obj.NodeIdToGridCoord(plannodeid[i]))
-		plan.append(obj.GridCoordToConfiguration(temp))
-
-	print plan
-
-        #plan.append(goal_config)
-
-	print "number of noelist"
-	print len(nodelist)
+        while (suc_node.id != start_node.id):
+            plan.insert(0,self.planning_env.discrete_env.NodeIdToConfiguration(suc_node.id))
+            suc_node = suc_node.parent
+        plan.insert(0,start_config)
+        print("--- %s seconds ---" % (time.time() - start_time))
+        print("--- %d expansions ---" % count)
+        plan.append(goal_config)
         return plan
+
+
+class Node:
+    def __init__(self, cost, parent, depth, id):
+        self.cost = cost
+        self.parent = parent
+        self.depth = depth
+        self.id = id
+
+    def __str__(self):
+        #Spits out a full list the node's state/operator and states/operators leading to it
+        result = "Cost: " +  str(self.cost)
+        result += " Depth: " + str(self.depth)
+        result += " ID: " + str(self.id)
+        if self.parent != None:
+            result += " Parent: " + str(self.parent.id)
+        return result
+
+
+class Closelist:
+
+    def __init__(self, env):
+        #import IPython
+        #IPython.embed()
+        self.close = []
+
+    def addNode(self, id):
+        bisect.insort(self.close,id)
+
+    def isDuplicate(self, id):
+        #import IPython
+        #IPython.embed()
+        if(bisect.bisect_left(self.close,id) == len(self.close)):
+            return False
+        if (self.close[bisect.bisect_left(self.close,id)] == id):
+            return True
+        return False
+
+
+class Openlist:
+    def __init__(self, env):
+        self.env = env
+        self.open = []
+        self.goal_id = None
+    def __str__(self):
+        result = "Open List contains " + str(len(self.open)) + " items\n"
+        for item in self.open:
+            result += str(item) + "\n"
+        return result
+    def setGoal(self, goal_id):
+        self.goal_id = goal_id
+
+    def addNode(self, node):
+        self.open.insert(0,node)
+
+    def getlowest(self):
+        if not self.isEmpty():
+            return self.open.pop(0)
+        else:
+            raise RunTimeError
+
+    def isEmpty(self):
+        return len(self.open) == 0
