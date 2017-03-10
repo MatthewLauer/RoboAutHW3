@@ -92,8 +92,4 @@ class DiscreteEnvironment(object):
             coord[i] = node_id//spacesize
             node_id = node_id - coord[i]*spacesize
         return coord
-        
-#dis = DiscreteEnvironment(.2, [0,0], [1,1])      
-#import IPython
-#IPython.embed()
-        
+
